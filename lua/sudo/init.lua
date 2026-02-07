@@ -22,12 +22,14 @@ M.setup = function(user_opts)
 		})
 
 		vim.api.nvim_create_user_command("SudoRead", function(opts)
-			M.buffer_read(opts.args)
-		end, { nargs = 1, complete = "file", desc = "Read given path with sudo", force = true })
+			local path = opts.args ~= "" and opts.args or vim.api.nvim_buf_get_name(0)
+			M.buffer_read(path)
+		end, { nargs = "?", complete = "file", desc = "Read given path with sudo", force = true })
 
 		vim.api.nvim_create_user_command("SudoEdit", function(opts)
-			M.buffer_read(opts.args)
-		end, { nargs = 1, complete = "file", desc = "Read given path with sudo (alias for SudoRead)", force = true })
+			local path = opts.args ~= "" and opts.args or vim.api.nvim_buf_get_name(0)
+			M.buffer_read(path)
+		end, { nargs = "?", complete = "file", desc = "Read given path with sudo (alias for SudoRead)", force = true })
 	end
 end
 
@@ -86,7 +88,7 @@ M.sudo_run = function(cmd, callback)
 		end
 	end
 
-	local full_cmd = string.format('sudo -S -p enter_password -- bash -c "echo password_correct ; %s"', cmd)
+	local full_cmd = string.format('sudo -S -p enter_password -- /bin/sh -c "echo password_correct ; %s"', cmd)
 
 	local jobid = vim.fn.jobstart(full_cmd, {
 		cwd = vim.fn.getcwd(),
@@ -117,15 +119,16 @@ M.buffer_write = function(path, line1, line2)
 	M.sudo_run("cat > " .. vim.fn.shellescape(path), function(jobid, data, event)
 		if event == "sudo_ready" then
 			local content = vim.api.nvim_buf_get_lines(0, line1 - 1, line2, false)
-			table.insert(content, "")
+			-- Ensure trailing newline if requested or needed, but standard cat > file usually handles what we send
+			if #content > 0 and content[#content] ~= "" then
+				table.insert(content, "")
+			end
 			vim.fn.chansend(jobid, content)
 			vim.fn.chanclose(jobid, "stdin")
 		elseif event == "exit" then
 			if data == 0 then
 				vim.notify("SudoWrite: Written to " .. path)
-				if path == vim.api.nvim_buf_get_name(0) then
-					vim.cmd("edit!")
-				end
+				vim.api.nvim_set_option_value("modified", false, { buf = 0 })
 			else
 				vim.notify("SudoWrite failed with exit code " .. data, vim.log.levels.ERROR)
 			end
@@ -157,12 +160,34 @@ M.buffer_read = function(path)
 					table.remove(lines, #lines)
 				end
 
-				local buf = vim.api.nvim_create_buf(true, false)
-				vim.api.nvim_buf_set_name(buf, path)
+				local buf = -1
+				-- Check if buffer with this name already exists
+				for _, b in ipairs(vim.api.nvim_list_bufs()) do
+					if vim.api.nvim_buf_get_name(b) == path then
+						buf = b
+						break
+					end
+				end
+
+				if buf == -1 then
+					buf = vim.api.nvim_create_buf(true, false)
+					vim.api.nvim_buf_set_name(buf, path)
+				end
+
 				vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
 				vim.api.nvim_set_option_value("modified", false, { buf = buf })
 				vim.api.nvim_set_current_buf(buf)
 				vim.cmd("filetype detect")
+
+				-- Set up BufWriteCmd to allow :w to work
+				local group = vim.api.nvim_create_augroup("SudoWrite_" .. buf, { clear = true })
+				vim.api.nvim_create_autocmd("BufWriteCmd", {
+					group = group,
+					buffer = buf,
+					callback = function()
+						M.buffer_write(path)
+					end,
+				})
 			else
 				vim.notify("SudoRead failed with exit code " .. data, vim.log.levels.ERROR)
 			end
