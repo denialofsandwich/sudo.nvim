@@ -1,7 +1,7 @@
 local Input = require("nui.input")
 local event = require("nui.utils.autocmd").event
 
--- Stolen from: https://github.com/MunifTanjim/nui.nvim/wiki/nui.input
+-- Taken from: https://github.com/MunifTanjim/nui.nvim/wiki/nui.input
 local SecretInput = Input:extend("SecretInput")
 
 function SecretInput:init(popup_options, options)

@@ -7,16 +7,17 @@ This plugin is experimental and may not work in all cases. Please report any iss
 
 ## Usage
 
-You can use the `:SudoWrite` command to write the current buffer using sudo and the `:SudoRead` command to read a file using sudo.
+You can use the `:SudoWrite` command to write the current buffer using sudo and the `:SudoRead` or `:SudoEdit` command to read a file using sudo.
 
-## Installation using lazy.vim
+## Installation using lazy.nvim
 
 ```lua
-  {
-    "denialofsandwich/sudo.nvim",
-    dependencies = {
-      "MunifTanjim/nui.nvim",
-    },
-    config = true,
+{
+  "denialofsandwich/sudo.nvim",
+  cmd = { "SudoRead", "SudoWrite", "SudoEdit" },
+  dependencies = {
+    "MunifTanjim/nui.nvim",
   },
+  config = true,
+},
 ```
