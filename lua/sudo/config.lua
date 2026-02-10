@@ -8,7 +8,6 @@ local M = {
 	},
 }
 
---- Setup configuration values.
 M.setup = function(config)
 	if config ~= nil then
 		M.opts = vim.tbl_deep_extend("force", M.opts, config)

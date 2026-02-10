@@ -39,9 +39,12 @@ function SecretInput:mount()
 end
 
 --- @param title string
---- @param on_submit fun(value: string)
-local ask_password = function(title, on_submit)
+--- @param on_submit_callback fun(value: string)
+--- @param on_cancel_callback fun()|nil
+local ask_password = function(title, on_submit_callback, on_cancel_callback)
 	title = title or "Password"
+	local submitted_successfully = false
+	local cancelled = false
 
 	local input = SecretInput({
 		position = "50%",
@@ -58,20 +61,40 @@ local ask_password = function(title, on_submit)
 	}, {
 		prompt = "> ",
 		default_value = "",
-		on_submit = on_submit,
+		on_submit = function(value)
+			if cancelled then
+				return
+			end
+			submitted_successfully = true
+			on_submit_callback(value)
+			if input then
+				input:unmount()
+			end
+		end,
 	})
 
-	-- mount/open the component
 	input:mount()
 
-	-- unmount component when cursor leaves buffer
+	vim.schedule(function()
+		vim.cmd("startinsert!")
+	end)
+
+	input:on(event.InsertLeave, function()
+		if not submitted_successfully and not cancelled then
+			cancelled = true
+			input:unmount()
+		end
+	end)
+
 	input:on(event.BufLeave, function()
-		input:unmount()
+		if not submitted_successfully and cancelled and on_cancel_callback then
+			on_cancel_callback()
+		end
 	end)
 end
 
 --- @class PasswordInput
---- @field ask_password fun(title: string, on_submit: fun(value: string))
+--- @field ask_password fun(title: string, on_submit: fun(value: string), on_cancel: fun()|nil)
 
 --- @type PasswordInput
 return {
