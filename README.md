@@ -1,7 +1,7 @@
 # sudo.nvim
 
 This small plugin allows you to read and write files in Neovim using root permissions via `sudo`.
-Unlike other solutions, it uses [nui.nvim](https://github.com/MunifTanjim/nui.nvim) to prompt for the password directly within Neovim, eliminating the need for an external `askpass` provider.
+It uses [nui.nvim](https://github.com/MunifTanjim/nui.nvim) to prompt for the password directly within Neovim, eliminating the need for an external `askpass` provider.
 
 ## Features
 
@@ -31,18 +31,18 @@ Unlike other solutions, it uses [nui.nvim](https://github.com/MunifTanjim/nui.nv
 
 ### Commands
 
-| Command | Description |
-| :--- | :--- |
-| `:SudoRead [path]` | Reads the specified file (or the current file if no path given) using sudo. |
-| `:SudoEdit [path]` | Alias for `:SudoRead`. |
-| `:SudoWrite [path]` | Writes the current buffer (or range) to the specified path using sudo. |
+| Command             | Description                                                                 |
+| :------------------ | :-------------------------------------------------------------------------- |
+| `:SudoRead [path]`  | Reads the specified file (or the current file if no path given) using sudo. |
+| `:SudoEdit [path]`  | Alias for `:SudoRead`.                                                      |
+| `:SudoWrite [path]` | Writes the current buffer (or range) to the specified path using sudo.      |
 
 ### Workflow
 
-1.  Run `:SudoRead /etc/hosts`
-2.  Enter your password in the popup.
-3.  Edit the file as usual.
-4.  Save normally with `:w`.
+1. Run `:SudoRead /etc/hosts`
+2. Enter your password in the popup.
+3. Edit the file as usual.
+4. Save normally with `:w`.
 
 ## Configuration
 
