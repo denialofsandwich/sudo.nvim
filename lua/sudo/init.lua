@@ -60,10 +60,8 @@ M.sudo_run = function(cmd, callback)
 						end)
 					end)
 					return
-				end
-
-				if line:find("incorrect password") or line:find("try again") then
-					vim.notify("Sudo: Incorrect password", vim.log.levels.ERROR)
+				else
+					vim.notify(line, vim.log.levels.ERROR)
 				end
 
 				::continue::
